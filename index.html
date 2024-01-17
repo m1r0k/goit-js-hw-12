@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/goit-js-hw-12/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>goit-js-hw-12</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500&family=Poppins&family=Raleway:wght@700&family=Roboto:wght@400;500;700&display=swap"
+      rel="stylesheet"
+    />
+    
+    <script type="module" crossorigin src="/goit-js-hw-12/commonHelpers.js"></script>
+    <link rel="modulepreload" crossorigin href="/goit-js-hw-12/assets/vendor-89feecc5.js">
+    <link rel="stylesheet" href="/goit-js-hw-12/assets/vendor-eb6030bc.css">
+    <link rel="stylesheet" href="/goit-js-hw-12/assets/index-bc8ac74f.css">
+  </head>
+  <body>
+    <header>
+      <form id="search-form">
+        <input
+          type="text"
+          name="query"
+          id="search-input"
+          placeholder="Search images..."
+        />
+        <button type="submit">Search</button>
+      </form>
+    </header>
+    <main>
+      <div id="image-gallery" class="gallery"></div>
+      <p id="spinner" class="loader spinner is-hidden">
+        Loading images, please wait...
+      </p>
+      <button
+        id="load-more"
+        type="button"
+        class="btn btn-primary button is-hidden"
+        data-action="load-more"
+      >
+        Load more
+      </button>
+    </main>
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+    
+  </body>
+</html>
