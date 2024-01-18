@@ -62,11 +62,6 @@ button:hover {
   margin-right: auto;
 }
 
-.btn:hover {
-  background-color: #4E75FF;
-  border: #4E75FF;
-}
-
 .btn.is-hidden {
   display: none;
 }
@@ -133,6 +128,8 @@ button:hover {
 
 #load-more {
   margin-top: 10px;
+  background-color: #4E75FF;
+  border: #4E75FF;
 }
 
 .is-loading {

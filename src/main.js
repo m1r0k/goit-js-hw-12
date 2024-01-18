@@ -1,4 +1,4 @@
-import iziToast from "izitoast";
+ import iziToast from "izitoast";
 import SimpleLightbox from "simplelightbox";
 import "izitoast/dist/css/iziToast.min.css";
 import "simplelightbox/dist/simple-lightbox.min.css";
@@ -13,22 +13,25 @@ const loadMoreBtn = document.getElementById("load-more");
 
 let lightbox;
 let currentPage = 1;
+let pageSize = 40;
+let currentQuery = "";
 
 searchForm.addEventListener("submit", async (event) => {
   event.preventDefault();
-  const searchTerm = searchInput.value.trim();
-  if (searchTerm === "") return;
+  const query = searchInput.value.trim();
+  if (query === "") return;
+  currentQuery = query;
 
   try {
     toggleSpinner(true);
-    const response = await axios.get(`https://pixabay.com/api/?key=${API_KEY}&q=${searchTerm}&image_type=photo&orientation=horizontal&safesearch=true`);
+    const response = await axios.get(`https://pixabay.com/api/?key=${API_KEY}&q=${currentQuery}&image_type=photo&orientation=horizontal&safesearch=true&page=${currentPage}&per_page=${pageSize}`);
     
-    if (response.status !== 200) {
-      throw new Error('Network response was not ok');
-    }
+    // if (response.status !== 2**) {
+    //   throw new Error('Network response was not ok');
+    // }
 
     const data = response.data;
-    displayImages(data.hits);
+    displayImages(data.hits.slice(0, pageSize));
     currentPage = 1;
   } catch (error) {
     showError();
@@ -45,19 +48,19 @@ loadMoreBtn.addEventListener('click', async () => {
 
 async function fetchAndDisplayImages() {
   try {
-    const searchTerm = searchInput.value.trim();
-    if (searchTerm === '') return;
+    const query = searchInput.value.trim();
+    if (query === '') return;
 
     toggleSpinner(true);
 
-    const response = await axios.get(`https://pixabay.com/api/?key=${API_KEY}&q=${searchTerm}&image_type=photo&orientation=horizontal&safesearch=true&page=${currentPage}`);
+    const response = await axios.get(`https://pixabay.com/api/?key=${API_KEY}&q=${currentQuery}&image_type=photo&orientation=horizontal&safesearch=true&page=${currentPage}&per_page=${pageSize}`);
 
-    if (response.status !== 200) {
-      throw new Error('Network response was not ok');
-    }
+    // if (response.status !== 2**) {
+    //   throw new Error('Network response was not ok');
+    // }
 
     const data = response.data;
-    appendImages(data.hits);
+    appendImages(data.hits.slice(0, pageSize));
   } catch (error) {
     showError();
   } finally {
@@ -71,21 +74,33 @@ function displayImages(images) {
     return;
   }
 
+   if (images.length < pageSize) {
+    toggleLoadMoreBtn(false);
+    toggleSpinner(false);
+  } else {
+    toggleLoadMoreBtn(true);
+  }
+
   imageGallery.innerHTML = "";
   const imageElements = images.map(createImageElement);
   imageGallery.append(...imageElements);
 
   lightbox = new SimpleLightbox('.gallery a', {
+    q: currentQuery,
     image_type: 'photo',
     orientation: 'horizontal',
-    safesearch: true
+    safesearch: true,
+    page: currentPage,
+    per_page: pageSize
   });
   lightbox.refresh();
 }
 
 function appendImages(images) {
   if (images.length === 0) {
-    showError();
+    toggleLoadMoreBtn(false);
+    toggleSpinner(false);
+    theEnd();
     return;
   }
 
@@ -123,6 +138,14 @@ function createImageElement(image) {
   `;
   return link;
 }
+
+function theEnd() {
+  iziToast.info({
+    title: 'Info',
+    message: 'Sorry, there are no more images for your request. Please try again!',
+  });
+}
+
 
 function showError() {
   imageGallery.innerHTML = "";
