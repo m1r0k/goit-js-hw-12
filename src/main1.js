@@ -2,7 +2,7 @@ import iziToast from "izitoast";
 import SimpleLightbox from "simplelightbox";
 import "izitoast/dist/css/iziToast.min.css";
 import "simplelightbox/dist/simple-lightbox.min.css";
-// import axios from "axios";
+import axios from "axios";
 
 const api = axios.create({
   baseURL: "https://pixabay.com/api/",
@@ -15,47 +15,57 @@ const api = axios.create({
   },
 });
 
-const searchForm = document.querySelector(".search-form"); // Клас, а не тег
-const imageGallery = document.querySelector(".image-gallery"); // Клас, а не тег
-const loadMoreBtn = document.querySelector('button[data-action="load-more"]');
-const loadMoreSpinner = document.querySelector('.spinner'); // Додавання спіннера для loadMore
-let lightbox;
+const searchForm = document.getElementById("search-form");
+const imageGallery = document.getElementById("image-gallery");
+const loadMoreBtn = document.getElementById('load-more');
+const loadMoreSpinner = document.getElementById('spinner'); let lightbox;
+let currentQuery = '';
+let currentPage = 1;
+const pageSize = 40;
+
 
 function renderImages(images = []) {
   const markup = images.reduce(
-    (html, { webformatURL, tags, likes, views, comments, downloads }) =>
+    (html, { largeImageURL, tags, likes, views, comments, downloads }) =>
       html +
       `
-    <li class="gallery-item">
-      <img src="${webformatURL}" alt="${tags}">
-      <ul class="image-info">
-        <li class="img-info-item">
+    <div class="gallery-item">
+      <img src="${largeImageURL}" alt="${tags}">
+      <div class="image-info">
+        <div class="img-info-item">
           <p>Likes:</p>
           <p> ${likes}</p>
-        </li>
-        <li class="img-info-item">
+        </div>
+        <div class="img-info-item">
           <p>Views: </p>
           <p>${views}</p>
-        </li>
-        <li class="img-info-item">
+        </div>
+        <div class="img-info-item">
           <p>Comments: </p>
           <p>${comments}</p>
-        </li>
-        <li class="img-info-item">
+        </div>
+        <div class="img-info-item">
           <p>Downloads: </p>
           <p>${downloads}</p>
-        </li>
-      </ul>
-    </li>`,
+        </div>
+      </div>
+    </div>`,
     ""
   );
 
   imageGallery.insertAdjacentHTML("beforeend", markup);
+  lightbox.refresh();
 }
 
 const getImages = async (params) => {
   try {
-    const response = await api.get("everything", { params });
+    const response = await api.get("", {
+      params: {
+        q: currentQuery,
+        page: currentPage,
+        per_page: pageSize,
+      },
+    });
     return response.data;
   } catch (error) {
     showError();
@@ -63,9 +73,8 @@ const getImages = async (params) => {
 };
 
 const createGetImagesRequest = (q) => {
-  let page = 1;
+  currentPage = 1;
   let isLastPage = false;
-  const pageSize = 40;
 
   return async () => {
     try {
@@ -73,11 +82,11 @@ const createGetImagesRequest = (q) => {
 
       const { images, totalResults } = await getImages({ page, pageSize, q });
 
-      if (page >= Math.ceil(totalResults / pageSize)) {
+      if (currentPage >= Math.ceil(totalResults / pageSize)) {
         isLastPage = true;
       }
 
-      page += 1;
+      currentPage += 1;
 
       return images;
     } catch (error) {
@@ -97,11 +106,11 @@ searchForm.addEventListener("submit", async (event) => {
   }
 
   const data = new FormData(event.currentTarget);
-  const query = data.get("query");
+  currentQuery = data.get("query");
 
   imageGallery.innerHTML = "";
 
-  const fetchImages = createGetImagesRequest(query);
+  const fetchImages = createGetImagesRequest(currentQuery);
 
   doFetch = async () => {
     const images = await makePromiseWithSpinner({
@@ -110,6 +119,7 @@ searchForm.addEventListener("submit", async (event) => {
     });
 
     renderImages(images);
+    initializeLightbox();
   };
 
   await makePromiseWithSpinner({
@@ -119,6 +129,18 @@ searchForm.addEventListener("submit", async (event) => {
 
   loadMoreBtn.addEventListener("click", doFetch);
 });
+
+function initializeLightbox() {
+  lightbox = new SimpleLightbox('.gallery a', {
+    q: currentQuery,
+    image_type: 'photo',
+    orientation: 'horizontal',
+    safesearch: true,
+    page: currentPage,
+    per_page: pageSize
+  });
+  lightbox.refresh();
+}
 
 const makePromiseWithSpinner = async ({
   promise,
@@ -142,10 +164,4 @@ function showError() {
       "Sorry, there are no images matching your search query. Please try again!",
   });
 }
-
-const options = {
-  image_type: "photo",
-  orientation: "horizontal",
-  safesearch: true,
-};
 
