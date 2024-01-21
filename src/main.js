@@ -24,10 +24,11 @@ let currentPage = 1;
 let pageSize = 40;
 let currentQuery = "";
 let isLastPage = false;
+let pageQuntity;
 
-searchForm.addEventListener("submit", async (event) => {
+searchForm.addEventListener('submit', async event => {
   event.preventDefault();
-  const query = new FormData(event.currentTarget).get("query");
+  const query = new FormData(event.currentTarget).get('query');
   if (!query) return;
 
   currentQuery = query;
@@ -36,6 +37,13 @@ searchForm.addEventListener("submit", async (event) => {
   try {
     toggleSpinner(true);
     const data = await fetchImages();
+    pageQuntity = data.totalHits;
+    if (currentPage === Math.ceil(pageQuntity / pageSize)) {
+      loadMoreBtn.classList.add('is-hidden');
+      theEnd();
+    } else {
+      loadMoreBtn.classList.remove('is-hidden');
+    }
     displayImages(data.hits);
   } catch (error) {
     showError();
@@ -44,14 +52,17 @@ searchForm.addEventListener("submit", async (event) => {
   }
 });
 
-loadMoreBtn.addEventListener("click", async () => {
+loadMoreBtn.addEventListener('click', async () => {
   currentPage += 1;
-  await fetchAndDisplayImages();
+  console.log(currentPage);
 
-  if (isLastPage = true) {
+  if (currentPage === Math.ceil(pageQuntity / pageSize)) {
     loadMoreBtn.classList.add('is-hidden');
     theEnd();
-  } 
+  } else {
+    loadMoreBtn.classList.remove('is-hidden');
+  }
+  await fetchAndDisplayImages();
 });
 
 async function fetchImages() {
@@ -83,18 +94,16 @@ function displayImages(images) {
     return;
   }
 
-    isLastPage = (images.length < pageSize);
-    loadMoreBtn.classList.remove("is-hidden");
-    toggleSpinner(false);
+  loadMoreBtn.classList.remove("is-hidden");
+  toggleSpinner(false);
 
   const imageElements = images.map(createImageElement);
   imageGallery.innerHTML = "";
   imageGallery.append(...imageElements);
 
-    // if (isLastPage) {
-    //   loadMoreBtn.classList.add('is-hidden');
-    //   theEnd();
-    // }
+  if (currentPage === Math.ceil(pageQuntity / pageSize)) {
+    loadMoreBtn.classList.add('is-hidden');
+  }
 
   initializeLightbox();
 }
